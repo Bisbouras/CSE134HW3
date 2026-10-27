@@ -12,11 +12,16 @@
   --dust-dim: #8792a6;
   --white: #eef2f8;
   --beam: #f0c98a;
+  --beam-light: #f6dcb0;
+  --beam-soft: rgba(240, 201, 138, 0.4);
+  --beam-glow: rgba(240, 201, 138, 0.08);
+  --blue-glow: rgba(70, 110, 190, 0.14);
   --font-body: "Archivo", system-ui, sans-serif;
   --font-display: "Archivo Expanded", "Archivo", system-ui, sans-serif;
   --font-mono: ui-monospace, Consolas, monospace;
   --measure: 44rem;
   --radius: 3px;
+  --radius-sm: 2px;
 }
 
 * {
@@ -43,10 +48,10 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    radial-gradient(40vw 45vh at 8% 10%, rgba(240, 201, 138, 0.10), transparent 70%),
-    radial-gradient(45vw 50vh at 0% 80%, rgba(70, 110, 190, 0.14), transparent 72%),
-    radial-gradient(45vw 45vh at 96% 28%, rgba(70, 110, 190, 0.13), transparent 72%),
-    radial-gradient(35vw 40vh at 100% 90%, rgba(240, 201, 138, 0.07), transparent 70%);
+    radial-gradient(40vw 45vh at 8% 10%, var(--beam-glow), transparent 70%),
+    radial-gradient(45vw 50vh at 0% 80%, var(--blue-glow), transparent 72%),
+    radial-gradient(45vw 45vh at 96% 28%, var(--blue-glow), transparent 72%),
+    radial-gradient(35vw 40vh at 100% 90%, var(--beam-glow), transparent 70%);
 }
 
 /* background - grain */
@@ -236,10 +241,10 @@ code {
   font-family: var(--font-mono);
   font-size: 0.88em;
   padding: 0.08em 0.35em;
-  color: #dbe3f0;
+  color: var(--white);
   background-color: var(--night-lift);
   border: 1px solid var(--edge);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 a {
@@ -256,7 +261,7 @@ a:hover {
 /* links inside body text */
 main p a {
   color: var(--beam);
-  border-bottom-color: rgba(240, 201, 138, 0.35);
+  border-bottom-color: var(--beam-soft);
 }
 
 a:focus,
@@ -321,7 +326,7 @@ main > section > article > :last-child {
 }
 
 main > section > article:has(h3 > a):hover {
-  border-color: rgba(240, 201, 138, 0.5);
+  border-color: var(--beam-soft);
 }
 
 main > section > article h3 {
@@ -350,7 +355,7 @@ main > section > article p > span {
   font-size: 0.85rem;
   color: var(--dust-dim);
   border: 1px solid var(--edge);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* skill chips */
@@ -368,7 +373,7 @@ section[aria-labelledby="skills-heading"] li {
   font-size: 0.9rem;
   background-color: var(--night-lift);
   border: 1px solid var(--edge);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* project page header */
@@ -440,7 +445,7 @@ figure svg {
   width: 100%;
   background-color: var(--night-lift);
   border: 1px solid var(--edge);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* cv preview */
@@ -506,7 +511,7 @@ button {
 }
 
 button:hover {
-  background-color: #f6dcb0;
+  background-color: var(--beam-light);
 }
 
 /* footer */
