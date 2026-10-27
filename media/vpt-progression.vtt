@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.000
+Cornell box, no medium.
+
+00:00:02.000 --> 00:00:04.000
+Light fog: absorption only, blue absorbed most.
+
+00:00:04.000 --> 00:00:06.000
+Heavy fog: warmer and darker with depth.
+
+00:00:06.000 --> 00:00:08.000
+In-scattering, isotropic (g = 0).
+
+00:00:08.000 --> 00:00:10.000
+In-scattering, forward (g = 0.5).
+
+00:00:10.000 --> 00:00:12.500
+Hero scene: light shafts through a window, 4096 samples per pixel.

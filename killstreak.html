@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="KILLSTREAK: a top-down 1v1 tactical shooter in Godot 4 where a vision cone decides what each player can see. Design write-up by Christos Enotiadis.">
+  <meta name="author" content="Christos-Iason Enotiadis">
+  <title>KILLSTREAK | Christos Enotiadis</title>
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <style>
+    body > header, main, body > footer { border: 1px solid; }
+    section, article, fieldset { border: 1px dashed; }
+
+    /* Custom Element #1: <project-facts>, a semantic summary box for a project.
+       CSS scoped to this element does not count toward the HW2 style limit. */
+    project-facts { display: block; border: 1px solid; padding: 0.5em 1em; margin: 1em 0; max-width: 36em; }
+    project-facts dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25em 1em; margin: 0; }
+    project-facts dd { margin: 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <p><a href="index.html"><b>Christos Enotiadis</b></a></p>
+    <nav aria-label="Primary">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li>Work
+          <ul>
+            <li><a href="killstreak.html" aria-current="page">KILLSTREAK</a></li>
+            <li><a href="vpt.html">Volumetric Path Tracing</a></li>
+            <li><a href="poker.html">Poker Engine</a></li>
+          </ul>
+        </li>
+        <li><a href="experience.html">Experience</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article aria-labelledby="ks-title">
+      <header>
+        <p>Work / KILLSTREAK</p>
+        <h1 id="ks-title">KILLSTREAK</h1>
+        <p>
+          A top-down 1v1 shooter, built in Godot, where the map is always visible but the opponent is not:
+          a vision cone decides what either player can actually see.
+        </p>
+      </header>
+
+      <project-facts>
+        <dl>
+          <dt>Role</dt>
+          <dd>Solo: design, gameplay and network programming</dd>
+          <dt>Engine</dt>
+          <dd>Godot 4, GDScript</dd>
+          <dt>Genre</dt>
+          <dd>Top-down 1v1 tactical shooter</dd>
+          <dt>Status</dt>
+          <dd>Milestone 1 (networked prototype) built; first playtest next</dd>
+        </dl>
+      </project-facts>
+
+      <section aria-labelledby="ks-pitch">
+        <h2 id="ks-pitch">The pitch</h2>
+        <p>
+          KILLSTREAK is played from directly above. The camera shows the whole arena's geometry at all times,
+          but the opponent, every gun on the ground and every thrown weapon only render when they fall inside
+          your <b>vision cone</b>, a slice of the map in front of wherever you are aiming. Checking a doorway
+          means turning your gun away from whatever is in front of you right now.
+        </p>
+        <p>
+          It is a game of information: knowing where the opponent is, and whether they know where you are.
+          There is no carryover between rounds and no progression, just a clean slate every time. Standing
+          still is the most accurate way to shoot, but the map is built so that never moving loses anyway.
+          Kills take real time, too: about 1.5 to 2.5 seconds with the pistol depending on range, roughly half
+          that with the rifle, which is long enough for whoever gets caught out to fight back.
+        </p>
+      </section>
+
+      <section aria-labelledby="ks-vision">
+        <h2 id="ks-vision">Vision and sound</h2>
+        <p>
+          The vision cone is what actually hides things. Everything exists in the world, but none of it draws
+          to your screen unless it is inside your cone, and the edge is a <em>hard cutoff</em> rather than a
+          fade, so what you see is exactly what your position and aim earn you.
+        </p>
+        <p>
+          Sound covers the gap the cone leaves. Footsteps outside your vision draw as an arc of possible
+          bearings instead of an exact position: narrower for a loud sound like running, wider for a quiet one
+          like walking. The true direction sits off centre within that arc on purpose, so you can't just aim at
+          its middle.
+        </p>
+        <figure>
+          <svg width="570" height="405" viewBox="0 0 760 540" role="img" aria-labelledby="cone-title cone-desc" font-family="Arial, sans-serif">
+            <title id="cone-title">What a player actually sees</title>
+            <desc id="cone-desc">A player's vision cone, hard-clipped by a wall's shadow. One opponent inside the cone past the wall is visible; another outside the cone is not rendered. An audio arc near the player marks footsteps, with the true bearing off-centre in the band.</desc>
+            <rect x="0" y="0" width="760" height="540" fill="#0d1730"/>
+            <text x="380" y="30" text-anchor="middle" font-size="22" font-weight="bold" fill="#f0c98a">WHAT A PLAYER ACTUALLY SEES</text>
+            <text x="380" y="52" text-anchor="middle" font-size="14" fill="#8792a6">hard-edged cone occlusion, plus an audio arc that is never centred on the truth</text>
+            <g transform="translate(0,60)">
+              <rect x="40" y="40" width="680" height="400" fill="#131f38" stroke="#2a3958" stroke-width="2"/>
+              <polygon points="140,400 720,120 720,340" fill="#f0c98a" fill-opacity="0.20"/>
+              <polygon points="430,140 541.5,40 720,40 720,160 430,280" fill="#131f38"/>
+              <rect x="430" y="140" width="24" height="140" fill="#9aa6bf" stroke="#c7cfdf" stroke-width="1"/>
+              <path d="M 102 318.4 A 90 90 0 0 1 163.3 313.1" fill="none" stroke="#f0c98a" stroke-width="12" stroke-linecap="round" opacity="0.5"/>
+              <circle cx="157.6" cy="311.7" r="4.5" fill="#f0c98a" stroke="#0d1730" stroke-width="1"/>
+              <circle cx="140" cy="400" r="14" fill="#2f6fb0" stroke="#7fb2e6" stroke-width="2"/>
+              <text x="140" y="428" text-anchor="middle" font-size="12" fill="#9cc4ec">you</text>
+              <circle cx="600" cy="360" r="15" fill="#d2d9e6" stroke="#8792a6" stroke-width="2"/>
+              <text x="600" y="390" text-anchor="middle" font-size="12" fill="#d2d9e6">seen, inside the cone</text>
+              <circle cx="200" cy="100" r="15" fill="none" stroke="#5a6684" stroke-width="2" stroke-dasharray="5 5"/>
+              <text x="200" y="80" text-anchor="middle" font-size="12" fill="#5a6684">hidden, not rendered</text>
+              <text x="300" y="300" font-size="13" font-weight="bold" fill="#e9d3a3">vision cone</text>
+              <text x="560" y="85" font-size="13" fill="#8792a6">hard shadow</text>
+              <text x="40" y="300" font-size="13" fill="#e9d3a3">audio arc</text>
+            </g>
+          </svg>
+          <figcaption>
+            One player's view of a single moment. The opponent past the wall is lit and rendered; the one
+            outside the cone does not exist on screen at all. The audio arc gives away that something is moving,
+            but its true bearing sits off centre, so the arc alone can't be aimed at.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section aria-labelledby="ks-weapons">
+        <h2 id="ks-weapons">Ground weapons</h2>
+        <p>
+          Everyone starts with a pistol. Every stronger weapon is a pickup on the ground, and you can only hold
+          one gun at a time, so taking a new one means <b>throwing your current one away</b> first. Nothing
+          respawns mid-round, so a bad trade can leave you weaponless. A thrown weapon does damage on impact,
+          bounces off walls, and keeps whatever ammo it had loaded: throwing an empty pistol at someone can
+          literally arm them.
+        </p>
+        <figure>
+          <img src="images/killstreak-arena.svg" width="560" height="576"
+               alt="Top-down diagram of the Milestone 1 arena: mirrored spawns, a rifle pickup behind a phase wall on each side, corner cover and a centre pillar.">
+          <figcaption>
+            The Milestone 1 arena is mirror-symmetric between the two spawns but has asymmetric approach lanes.
+            Each rifle sits behind a wall that cycles solid and open every 8 seconds, so reaching it is about
+            timing as much as positioning.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section aria-labelledby="ks-net">
+        <h2 id="ks-net">Networking</h2>
+        <p>
+          Milestone 1 was networked from day one rather than retrofitted later: server-authoritative, with
+          clients sending input and the server deciding what happened. All gameplay state, down to the map's
+          random numbers, can be captured and restored as a single snapshot on a fixed timestep. That
+          discipline is what let internet play be pulled forward: client-side prediction for movement plugged
+          into an already deterministic simulation.
+        </p>
+        <p>
+          Shots are the one place prediction and authority meet. Movement is predicted so it feels instant,
+          but hit detection stays on the server, which checks each shot against the opponent's position
+          <em>rewound by the shooter's round-trip time</em>. A game built on sudden close-range reveals is the
+          last place you want a guessed outcome.
+        </p>
+      </section>
+
+      <section aria-labelledby="ks-status">
+        <h2 id="ks-status">Where it stands</h2>
+        <p>
+          <label for="ks-roadmap">Roadmap progress:</label>
+          <progress id="ks-roadmap" value="2" max="5">2 of 5 roadmap steps done</progress>
+          2 of 5 steps done
+        </p>
+        <ol>
+          <li><strong>Done:</strong> Milestone 1, a LAN-playable prototype with vision-cone rendering, hitscan combat, the pickup-and-throw loop and round reset.</li>
+          <li><strong>Done:</strong> internet play through a dedicated host, with movement prediction and lag-compensated hits.</li>
+          <li><strong>Next:</strong> a full playtest on two separate machines, then tuning spread, time-to-kill and timings against real sessions.</li>
+          <li>Wiring real sound into the audio-visualisation system, which is already built.</li>
+          <li>Round structure and the match-level streak win condition, with grenades and penetrable cover under consideration.</li>
+        </ol>
+        <p>
+          The question the playtest exists to answer: does contesting weapons under vision cones produce real
+          decisions, or just two players holding angles? The design document is available on request.
+        </p>
+      </section>
+
+      <section aria-labelledby="ks-playtest">
+        <h2 id="ks-playtest">Sign up to playtest</h2>
+        <p>
+          I'm looking for people to play the first two-machine sessions. Matches are short, and all I ask is
+          ten minutes of honest feedback afterwards.
+        </p>
+        <!-- Markup only for HW2; the form is wired up in a later homework. -->
+        <form action="#" method="post">
+          <fieldset>
+            <legend>About you</legend>
+            <div>
+              <label for="pt-name">Name</label><br>
+              <input type="text" id="pt-name" name="name" autocomplete="name" required>
+            </div>
+            <div>
+              <label for="pt-email">Email</label><br>
+              <input type="email" id="pt-email" name="email" autocomplete="email" required>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>How you'd play</legend>
+            <input type="radio" id="pt-lan" name="setup" value="lan">
+            <label for="pt-lan">LAN, in person</label><br>
+            <input type="radio" id="pt-online" name="setup" value="online">
+            <label for="pt-online">Online</label><br>
+            <input type="radio" id="pt-either" name="setup" value="either" checked>
+            <label for="pt-either">Either</label>
+          </fieldset>
+
+          <p>
+            <label for="pt-notes">Anything I should know?</label><br>
+            <textarea id="pt-notes" name="notes" rows="4" cols="50"></textarea>
+          </p>
+
+          <button type="submit">Sign up</button>
+        </form>
+
+        <dialog id="pt-dialog" aria-labelledby="pt-dialog-heading">
+          <h3 id="pt-dialog-heading">You're on the list</h3>
+          <p>Thanks. I'll be in touch about the next session.</p>
+          <form method="dialog">
+            <button type="submit">Close</button>
+          </form>
+        </dialog>
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    <address>
+      <ul>
+        <li><a href="mailto:cenotiadis@ucsd.edu">Email</a></li>
+        <li><a href="https://github.com/Bisbouras">GitHub</a></li>
+        <li><a href="https://linkedin.com/in/christos-enotiadis">LinkedIn</a></li>
+        <li><a href="docs/cv.pdf">CV (PDF)</a></li>
+      </ul>
+    </address>
+    <p><a href="experiments.html">HTML experiments</a></p>
+    <p><small>&copy; 2026 Christos-Iason Enotiadis. Plain semantic HTML, CSE 134B Homework 2.</small></p>
+  </footer>
+</body>
+</html>

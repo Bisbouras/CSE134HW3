@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Volumetric path tracing: a physically based C++ renderer extended with fog, in-scattering and light shafts. Write-up by Christos Enotiadis.">
+  <meta name="author" content="Christos-Iason Enotiadis">
+  <title>Volumetric Path Tracing | Christos Enotiadis</title>
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <style>
+    body > header, main, body > footer { border: 1px solid; }
+    section, article { border: 1px dashed; }
+
+    /* Custom Element #1: <project-facts> (scoped CSS, see killstreak.html). */
+    project-facts { display: block; border: 1px solid; padding: 0.5em 1em; margin: 1em 0; max-width: 36em; }
+    project-facts dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25em 1em; margin: 0; }
+    project-facts dd { margin: 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <p><a href="index.html"><b>Christos Enotiadis</b></a></p>
+    <nav aria-label="Primary">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li>Work
+          <ul>
+            <li><a href="killstreak.html">KILLSTREAK</a></li>
+            <li><a href="vpt.html" aria-current="page">Volumetric Path Tracing</a></li>
+            <li><a href="poker.html">Poker Engine</a></li>
+          </ul>
+        </li>
+        <li><a href="experience.html">Experience</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article aria-labelledby="vpt-title">
+      <header>
+        <p>Work / Volumetric Path Tracing</p>
+        <h1 id="vpt-title">Volumetric Path Tracing</h1>
+        <p>
+          A physically based renderer I wrote over a quarter, extended to support participating media: fog,
+          haze, and the light shafts they produce.
+        </p>
+      </header>
+
+      <project-facts>
+        <dl>
+          <dt>Course</dt>
+          <dd>CSE 168, Computer Graphics II: Rendering, UC San Diego</dd>
+          <dt>When</dt>
+          <dd>March to June 2026</dd>
+          <dt>Language</dt>
+          <dd>C++ with OpenMP, scene generation in Python</dd>
+          <dt>Final render</dt>
+          <dd>800 &times; 800 pixels, 4096 samples per pixel</dd>
+        </dl>
+      </project-facts>
+
+      <figure>
+        <picture>
+          <source srcset="images/vpt-hero.webp" type="image/webp">
+          <img src="images/vpt-hero.jpg" width="600" height="600"
+               alt="A dark room filled with fog; light shafts stream through a four-pane window onto a glossy sphere, which casts a dark streak through the fog behind it.">
+        </picture>
+        <figcaption>
+          The hero scene: a homogeneous medium with <var>&sigma;<sub>a</sub></var> = 0.02,
+          <var>&sigma;<sub>s</sub></var> = 0.075 and <var>g</var> = 0.45.
+        </figcaption>
+      </figure>
+
+      <section aria-labelledby="vpt-base">
+        <h2 id="vpt-base">The base renderer</h2>
+        <p>The volumetric work sits on top of a path tracer built from scratch:</p>
+        <ul>
+          <li>a BVH for acceleration and an iterative integrator in <code>pathTrace()</code></li>
+          <li>next event estimation and multiple importance sampling (power heuristic) in <code>shadeMIS()</code></li>
+          <li>Russian roulette termination, cosine and BRDF importance sampling</li>
+          <li>Phong and GGX microfacet BRDFs through <code>evalBRDF()</code></li>
+        </ul>
+        <p>
+          Media are handled at each bounce rather than in a separate integrator, and the absorption-only path
+          is kept as a fallback when <var>&sigma;<sub>s</sub></var> = 0, so every surface-only scene still
+          renders identically.
+        </p>
+      </section>
+
+      <section aria-labelledby="vpt-impl">
+        <h2 id="vpt-impl">Implementation</h2>
+        <ol>
+          <li>A <code>Medium</code> struct holds absorption, scattering and the Henyey-Greenstein asymmetry <var>g</var>; one homogeneous medium covers the whole scene.</li>
+          <li><code>transmittance(d, sc)</code> is evaluated per colour channel, so coloured fog works, and both NEE and BRDF samples are attenuated along their light segments.</li>
+          <li>Each bounce samples a free-flight distance from the mean extinction across channels. If it lands before the surface hit, the next vertex is a scattering event in the medium.</li>
+          <li>Sampling with a scalar extinction but attenuating per channel would bias the result, so scatter and surface vertices carry an exact correction weight. The estimator <strong>stays unbiased for coloured media</strong>.</li>
+          <li><code>hgPhase()</code> and <code>sampleHG()</code> give closed-form evaluation and inverse-CDF sampling. Because the sampling is exact, the phase value doubles as the pdf for MIS.</li>
+          <li><code>shadeMISVolume()</code> mirrors the surface direct-lighting estimator with the phase function in place of the BRDF, and shadow rays pick up transmittance.</li>
+          <li>The path then continues along a direction sampled from HG; the pdf cancels against the phase function, so throughput only carries the vertex weight from step 4.</li>
+        </ol>
+      </section>
+
+      <section aria-labelledby="vpt-absorb">
+        <h2 id="vpt-absorb">Absorption</h2>
+        <p>
+          Same Cornell box, same settings, only the medium changes. Blue is absorbed most and red least, so
+          the fog pushes the image warm, and surfaces farther from the camera dim with depth.
+        </p>
+        <figure>
+          <picture>
+            <source srcset="images/vpt-baseline.webp" type="image/webp">
+            <img src="images/vpt-baseline.jpg" width="240" height="240" alt="Cornell box with a sphere and no fog.">
+          </picture>
+          <picture>
+            <source srcset="images/vpt-fog-light.webp" type="image/webp">
+            <img src="images/vpt-fog-light.jpg" width="240" height="240" alt="The same Cornell box in light fog with a slight warm tint.">
+          </picture>
+          <picture>
+            <source srcset="images/vpt-fog-heavy.webp" type="image/webp">
+            <img src="images/vpt-fog-heavy.jpg" width="240" height="240" alt="The same Cornell box in heavy fog, strongly warm and dim toward the back wall.">
+          </picture>
+          <figcaption>
+            Left to right: no medium; light fog, <var>&sigma;<sub>a</sub></var> = (0.10, 0.15, 0.25);
+            heavy fog, <var>&sigma;<sub>a</sub></var> = (0.25, 0.35, 0.50).
+          </figcaption>
+        </figure>
+      </section>
+
+      <section aria-labelledby="vpt-scatter">
+        <h2 id="vpt-scatter">In-scattering</h2>
+        <p>
+          Adding scattering produces the glow below the light: light redirected toward the camera in mid air,
+          which absorption alone cannot produce. Forward scattering keeps that light travelling roughly in its
+          original direction, so the glow is brighter and more directional.
+        </p>
+        <figure>
+          <picture>
+            <source srcset="images/vpt-scatter-iso.webp" type="image/webp">
+            <img src="images/vpt-scatter-iso.jpg" width="240" height="240" alt="Cornell box with an even, soft glow beneath the ceiling light.">
+          </picture>
+          <picture>
+            <source srcset="images/vpt-scatter-forward.webp" type="image/webp">
+            <img src="images/vpt-scatter-forward.jpg" width="240" height="240" alt="Cornell box with a brighter, more focused glow beneath the ceiling light.">
+          </picture>
+          <figcaption>Isotropic scattering, <var>g</var> = 0 (left), and forward scattering, <var>g</var> = 0.5 (right).</figcaption>
+        </figure>
+      </section>
+
+      <section aria-labelledby="vpt-hero">
+        <h2 id="vpt-hero">The hero scene</h2>
+        <p>
+          A dark room, a four-pane window, and a small, very bright light about 25 units outside it. Shaft
+          sharpness comes from the angular size of the source: a large close light gives every shadow edge a
+          huge penumbra, so small and far away, with intensity scaled by distance squared, keeps the window
+          mullions crisp inside the beam.
+        </p>
+        <p>
+          The detail I like most is the long dark streak behind the sphere. It is the sphere's shadow
+          <em>through the fog</em>: nothing behind it receives direct light, so there is no in-scattering, and
+          the darkness is visible in mid air.
+        </p>
+      </section>
+
+      <section aria-labelledby="vpt-limits">
+        <h2 id="vpt-limits">Noise and limitations</h2>
+        <p>
+          Small bright lights in fog produce fireflies: rare paths that connect to the light with a tiny pdf.
+          Going from 1024 to 4096 samples per pixel reduced the speckle without removing it. Clamping radiance
+          would hide it but adds bias, and I chose to keep the estimator unbiased.
+        </p>
+        <p>
+          Media are homogeneous and global. Heterogeneous media with delta and ratio tracking was a stretch goal;
+          the time went into MIS correctness and the hero scene instead. Source code is available on request.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    <address>
+      <ul>
+        <li><a href="mailto:cenotiadis@ucsd.edu">Email</a></li>
+        <li><a href="https://github.com/Bisbouras">GitHub</a></li>
+        <li><a href="https://linkedin.com/in/christos-enotiadis">LinkedIn</a></li>
+        <li><a href="docs/cv.pdf">CV (PDF)</a></li>
+      </ul>
+    </address>
+    <p><a href="experiments.html">HTML experiments</a></p>
+    <p><small>&copy; 2026 Christos-Iason Enotiadis. Plain semantic HTML, CSE 134B Homework 2.</small></p>
+  </footer>
+</body>
+</html>
